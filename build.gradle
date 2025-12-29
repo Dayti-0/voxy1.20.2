@@ -151,7 +151,8 @@ dependencies {
 
     //modImplementation('io.github.douira:glsl-transformer:2.0.1')
 
-    modCompileOnly("maven.modrinth:vivecraft:1.20.2-1.1.10-fabric")
+    // Vivecraft not available for 1.20.2 on Modrinth
+    //modCompileOnly("maven.modrinth:vivecraft:1.20.2-1.1.10-fabric")
 
     // Flashback not available for 1.20.2
     //modCompileOnly("maven.modrinth:flashback:rNCr1Rbs")
