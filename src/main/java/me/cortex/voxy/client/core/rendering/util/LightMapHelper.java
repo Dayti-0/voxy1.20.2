@@ -4,10 +4,13 @@ import static org.lwjgl.opengl.GL33.glBindSampler;
 import static org.lwjgl.opengl.GL45.glBindTextureUnit;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
 
 public class LightMapHelper {
     public static void bind(int lightingIndex) {
         glBindSampler(lightingIndex, 0);
-        glBindTextureUnit(lightingIndex, ((com.mojang.blaze3d.opengl.GlTexture)(Minecraft.getInstance().gameRenderer.lightTexture().getTextureView().texture())).glId());
+        // In 1.20.2, LightTexture has a lightTexture field of type DynamicTexture
+        LightTexture lt = Minecraft.getInstance().gameRenderer.lightTexture();
+        glBindTextureUnit(lightingIndex, lt.lightTexture.getId());
     }
 }

@@ -1,7 +1,8 @@
 package me.cortex.voxy.client.core;
 
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE1;
 import me.cortex.voxy.client.TimingStatistics;
 import me.cortex.voxy.client.VoxyClient;
 import me.cortex.voxy.client.config.VoxyConfig;
@@ -32,8 +33,7 @@ import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.common.thread.ServiceManager;
 import me.cortex.voxy.common.world.WorldEngine;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
+import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -156,14 +156,14 @@ public class VoxyRenderSystem {
         }
 
         for (int i = 0; i < 12; i++) {
-            GlStateManager._activeTexture(GlConst.GL_TEXTURE0+i);
+            GlStateManager._activeTexture(GL_TEXTURE0+i);
             GlStateManager._bindTexture(0);
             glBindSampler(i, 0);
         }
     }
 
 
-    public Viewport<?> setupViewport(ChunkRenderMatrices matrices, FogParameters fogParameters, double cameraX, double cameraY, double cameraZ) {
+    public Viewport<?> setupViewport(ChunkRenderMatrices matrices, Object fogParameters, double cameraX, double cameraY, double cameraZ) {
         var viewport = this.getViewport();
         if (viewport == null) {
             return null;
@@ -284,7 +284,7 @@ public class VoxyRenderSystem {
 
         GPUTiming.INSTANCE.tick();
 
-        glBindFramebuffer(GlConst.GL_FRAMEBUFFER, oldFB);
+        glBindFramebuffer(GL_FRAMEBUFFER, oldFB);
         glViewport(dims[0], dims[1], dims[2], dims[3]);
 
         {//Reset state manager stuffs
@@ -293,9 +293,9 @@ public class VoxyRenderSystem {
 
             GlStateManager._glBindVertexArray(0);//Clear binding
 
-            GlStateManager._activeTexture(GlConst.GL_TEXTURE1);
+            GlStateManager._activeTexture(GL_TEXTURE1);
             for (int i = 0; i < 12; i++) {
-                GlStateManager._activeTexture(GlConst.GL_TEXTURE0+i);
+                GlStateManager._activeTexture(GL_TEXTURE0+i);
                 GlStateManager._bindTexture(0);
                 glBindSampler(i, 0);
             }

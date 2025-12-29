@@ -1,8 +1,7 @@
 package me.cortex.voxy.client.core.model;
 
-import net.caffeinemc.mods.sodium.client.util.color.ColorSRGB;
+import me.jellysquid.mods.sodium.client.util.color.ColorSRGB;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
-import net.minecraft.util.ARGB;
 
 //Texturing utils to manipulate data from the model bakery
 public class TextureUtils {
@@ -197,6 +196,15 @@ public class TextureUtils {
     }
 
 
+    // Helper method to convert linear to sRGB channel (replacement for ARGB.linearToSrgbChannel)
+    private static int linearToSrgbChannel(float linear) {
+        if (linear <= 0.0031308f) {
+            return (int) Math.min(255, Math.max(0, Math.round(linear * 12.92f * 255.0f)));
+        } else {
+            return (int) Math.min(255, Math.max(0, Math.round((1.055f * (float) Math.pow(linear, 1.0f / 2.4f) - 0.055f) * 255.0f)));
+        }
+    }
+
     public static int mipColours(boolean darkend, int C00, int C01, int C10, int C11) {
         darkend = !darkend;//Invert to make it easier
         float r = 0.0f;
@@ -232,7 +240,7 @@ public class TextureUtils {
                 r / 4,
                 g / 4,
                 b / 4,
-                darkend ? ((int) a) / 4 : ARGB.linearToSrgbChannel(a / 4)
+                darkend ? ((int) a) / 4 : linearToSrgbChannel(a / 4)
         );
     }
 }
