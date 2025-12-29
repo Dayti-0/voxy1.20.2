@@ -3,7 +3,7 @@ package me.cortex.voxy.client.core.rendering;
 import me.cortex.voxy.client.core.gl.GlBuffer;
 import me.cortex.voxy.client.core.rendering.util.DepthFramebuffer;
 import me.cortex.voxy.client.core.rendering.util.HiZBuffer;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
+// FogParameters doesn't exist in Sodium 0.5.x - fog is handled differently
 import net.minecraft.util.Mth;
 import org.joml.*;
 
@@ -35,7 +35,7 @@ public abstract class Viewport <A extends Viewport<A>> {
     public double cameraX;
     public double cameraY;
     public double cameraZ;
-    public FogParameters fogParameters;
+    public Object fogParameters; // Type changed for Sodium 0.5.x compatibility
 
     public final Matrix4f MVP = new Matrix4f();
     public final Vector3i section = new Vector3i();
@@ -88,7 +88,7 @@ public abstract class Viewport <A extends Viewport<A>> {
         return (A) this;
     }
 
-    public A setFogParameters(FogParameters fogParameters) {
+    public A setFogParameters(Object fogParameters) {
         this.fogParameters = fogParameters;
         return (A) this;
     }

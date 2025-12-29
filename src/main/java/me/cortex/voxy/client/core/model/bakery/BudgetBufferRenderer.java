@@ -1,17 +1,18 @@
 package me.cortex.voxy.client.core.model.bakery;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import me.cortex.voxy.client.core.gl.GlBuffer;
 import me.cortex.voxy.client.core.gl.GlVertexArray;
 import me.cortex.voxy.client.core.gl.shader.Shader;
 import me.cortex.voxy.client.core.gl.shader.ShaderType;
 import me.cortex.voxy.client.core.rendering.util.UploadStream;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
 
+import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL33.glBindSampler;
 import static org.lwjgl.opengl.GL45.*;
@@ -28,13 +29,24 @@ public class BudgetBufferRenderer {
     public static void init(){}
     private static final GlBuffer indexBuffer;
     static {
-        var i = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-        int id = ((com.mojang.blaze3d.opengl.GlBuffer) i.getBuffer(4096*3*2)).handle;
-        if (i.type() != VertexFormat.IndexType.SHORT) {
-            throw new IllegalStateException();
+        // In 1.20.2, we need to generate the index buffer ourselves
+        // For quads, we generate indices: 0,1,2, 2,3,0 pattern for each quad
+        int maxQuads = 4096 * 3;
+        indexBuffer = new GlBuffer(maxQuads * 6 * 2L); // 6 indices per quad, 2 bytes each (short)
+
+        // Generate quad indices
+        java.nio.ShortBuffer indices = org.lwjgl.BufferUtils.createShortBuffer(maxQuads * 6);
+        for (int i = 0; i < maxQuads; i++) {
+            int base = i * 4;
+            indices.put((short) base);
+            indices.put((short) (base + 1));
+            indices.put((short) (base + 2));
+            indices.put((short) (base + 2));
+            indices.put((short) (base + 3));
+            indices.put((short) base);
         }
-        indexBuffer = new GlBuffer(3*2*2*4096);
-        glCopyNamedBufferSubData(id, indexBuffer.id, 0, 0, 3*2*2*4096);
+        indices.flip();
+        glNamedBufferSubData(indexBuffer.id, 0, indices);
     }
 
     private static final int STRIDE = 24;
@@ -46,8 +58,10 @@ public class BudgetBufferRenderer {
 
     private static GlBuffer immediateBuffer;
     private static int quadCount;
-    public static void drawFast(MeshData buffer, GpuTexture tex, Matrix4f matrix) {
-        if (buffer.drawState().mode() != VertexFormat.Mode.QUADS) {
+
+    public static void drawFast(BufferBuilder.RenderedBuffer buffer, AbstractTexture tex, Matrix4f matrix) {
+        var drawState = buffer.drawState();
+        if (drawState.mode() != VertexFormat.Mode.QUADS) {
             throw new IllegalStateException("Fast only supports quads");
         }
 
@@ -57,8 +71,8 @@ public class BudgetBufferRenderer {
         size /= STRIDE;
         if (size%4 != 0) throw new IllegalStateException();
         size /= 4;
-        setup(MemoryUtil.memAddress(buff), size, ((com.mojang.blaze3d.opengl.GlTexture)tex).glId());
-        buffer.close();
+        setup(MemoryUtil.memAddress(buff), size, tex.getId());
+        buffer.release();
 
         render(matrix);
     }

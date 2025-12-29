@@ -18,12 +18,12 @@ import me.cortex.voxy.common.world.other.Mapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.LightLayer;
@@ -265,7 +265,7 @@ public class ModelFactory {
         var biomeEntry = this.biomeQueue.poll();
         while (biomeEntry != null) {
             var biomeRegistry = Minecraft.getInstance().level.registryAccess().lookupOrThrow(Registries.BIOME);
-            var res = this.addBiome0(biomeEntry.id, biomeRegistry.getValue(Identifier.parse(biomeEntry.biome)));
+            var res = this.addBiome0(biomeEntry.id, biomeRegistry.get(new ResourceLocation(biomeEntry.biome)).orElse(null));
             if (res != null) {
                 this.uploadResults.add(res);
             }
@@ -410,19 +410,19 @@ public class ModelFactory {
             this.fluidStateLUT[modelId] = clientFluidStateId;
         }
 
-        ChunkSectionLayer blockRenderLayer = null;
+        RenderType blockRenderLayer = null;
         if (blockState.getBlock() instanceof LiquidBlock) {
             blockRenderLayer = ItemBlockRenderTypes.getRenderLayer(blockState.getFluidState());
         } else {
             if (blockState.getBlock() instanceof LeavesBlock) {
-                blockRenderLayer = ChunkSectionLayer.SOLID;
+                blockRenderLayer = RenderType.solid();
             } else {
                 blockRenderLayer = ItemBlockRenderTypes.getChunkRenderType(blockState);
             }
         }
 
 
-        int checkMode = blockRenderLayer==ChunkSectionLayer.SOLID?TextureUtils.WRITE_CHECK_STENCIL:TextureUtils.WRITE_CHECK_ALPHA;
+        int checkMode = blockRenderLayer==RenderType.solid()?TextureUtils.WRITE_CHECK_STENCIL:TextureUtils.WRITE_CHECK_ALPHA;
 
 
 
@@ -484,7 +484,7 @@ public class ModelFactory {
         //Each face gets 1 byte, with the top 2 bytes being for whatever
         long metadata = 0;
         metadata |= isBiomeColourDependent?1:0;
-        metadata |= blockRenderLayer == ChunkSectionLayer.TRANSLUCENT?2:0;
+        metadata |= blockRenderLayer == RenderType.translucent()?2:0;
         metadata |= needsDoubleSidedQuads?4:0;
         metadata |= ((!isFluid) && !blockState.getFluidState().isEmpty())?8:0;//Has a fluid state accosiacted with it and is not itself a fluid
         metadata |= isFluid?16:0;//Is a fluid
@@ -520,7 +520,7 @@ public class ModelFactory {
 
             //TODO: add alot of config options for the following
             boolean occludesFace = true;
-            occludesFace &= blockRenderLayer != ChunkSectionLayer.TRANSLUCENT;//If its translucent, it doesnt occlude
+            occludesFace &= blockRenderLayer != RenderType.translucent();//If its translucent, it doesnt occlude
 
             //TODO: make this an option, basicly if the face is really close, it occludes otherwise it doesnt
             occludesFace &= offset < 0.1;//If the face is rendered far away from the other face, then it doesnt occlude
@@ -540,7 +540,7 @@ public class ModelFactory {
             metadata |= canBeOccluded?4:0;
 
             //Face uses its own lighting if its not flat against the adjacent block & isnt traslucent
-            metadata |= (offset > 0.01 || blockRenderLayer == ChunkSectionLayer.TRANSLUCENT)?0b1000:0;
+            metadata |= (offset > 0.01 || blockRenderLayer == RenderType.translucent())?0b1000:0;
 
 
 
@@ -563,11 +563,11 @@ public class ModelFactory {
             int area = (faceSize[1]-faceSize[0]+1) * (faceSize[3]-faceSize[2]+1);
             boolean needsAlphaDiscard = ((float)writeCount)/area<0.9;//If the amount of area covered by written pixels is less than a threashold, disable discard as its not needed
 
-            needsAlphaDiscard |= blockRenderLayer != ChunkSectionLayer.SOLID;
-            needsAlphaDiscard &= blockRenderLayer != ChunkSectionLayer.TRANSLUCENT;//Translucent doesnt have alpha discard
+            needsAlphaDiscard |= blockRenderLayer != RenderType.solid();
+            needsAlphaDiscard &= blockRenderLayer != RenderType.translucent();//Translucent doesnt have alpha discard
             faceModelData |= needsAlphaDiscard?1<<22:0;
 
-            faceModelData |= ((!faceCoversFullBlock)&&blockRenderLayer != ChunkSectionLayer.TRANSLUCENT)?1<<23:0;//Alpha discard override, translucency doesnt have alpha discard
+            faceModelData |= ((!faceCoversFullBlock)&&blockRenderLayer != RenderType.translucent())?1<<23:0;//Alpha discard override, translucency doesnt have alpha discard
 
             //Bits 24,25 are tint metadata
             if (colourProvider!=null) {//We have a tint
@@ -595,7 +595,7 @@ public class ModelFactory {
         int modelFlags = 0;
         modelFlags |= colourProvider != null?1:0;
         modelFlags |= isBiomeColourDependent?2:0;//Basicly whether to use the next int as a colour or as a base index/id into a colour buffer for biome dependent colours
-        modelFlags |= blockRenderLayer == ChunkSectionLayer.TRANSLUCENT?4:0;//Is translucent
+        modelFlags |= blockRenderLayer == RenderType.translucent()?4:0;//Is translucent
 
 
         //TODO: THIS

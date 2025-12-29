@@ -10,7 +10,7 @@ if (System.getenv("GITHUB_ACTIONS") == "true") {
             snapshotWrappers.setRemoveUnusedEntriesOlderThan(cleanupTime)
             downloadedResources.setRemoveUnusedEntriesOlderThan(cleanupTime)
             createdResources.setRemoveUnusedEntriesOlderThan(cleanupTime)
-            buildCache.setRemoveUnusedEntriesOlderThan(cleanupTime)
+            // buildCache removed - not available in Gradle 8.5
         }
     }
 }
