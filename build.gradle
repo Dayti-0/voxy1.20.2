@@ -213,13 +213,14 @@ tasks.register('makeExcludedRocksDB', Zip) {
     }
 }
 
-processIncludeJars {
-    outputs.cacheIf {true}
-
-    dependsOn makeExcludedRocksDB
-    jars = jars.filter {!it.name.startsWith('rocksdb')}
-    jars.from(makeExcludedRocksDB)
-}
+// processIncludeJars not available in Loom 1.4
+// processIncludeJars {
+//     outputs.cacheIf {true}
+//
+//     dependsOn makeExcludedRocksDB
+//     jars = jars.filter {!it.name.startsWith('rocksdb')}
+//     jars.from(makeExcludedRocksDB)
+// }
 
 remapJar {
     doFirst {
